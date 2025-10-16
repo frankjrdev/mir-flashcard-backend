@@ -32,6 +32,7 @@ const options: swaggerJsdoc.Options = {
         },
       },
       schemas: {
+        // Esquema de Usuario
         User: {
           type: 'object',
           properties: {
@@ -69,6 +70,70 @@ const options: swaggerJsdoc.Options = {
             }
           }
         },
+        // Esquema de Flashcard
+        Flashcard: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              description: 'ID único de la flashcard',
+              example: '5f8d0f4d7f8f8c2b2c2b2b2b'
+            },
+            question: {
+              type: 'string',
+              description: 'Pregunta de la flashcard',
+              example: '¿Cuál es la capital de Francia?'
+            },
+            answer: {
+              type: 'string',
+              description: 'Respuesta de la flashcard',
+              example: 'París'
+            },
+            subject: {
+              type: 'string',
+              description: 'ID de la materia a la que pertenece la flashcard',
+              example: '5f8d0f4d7f8f8c2b2c2b2b2b'
+            },
+            difficulty: {
+              type: 'string',
+              enum: ['easy', 'medium', 'hard'],
+              description: 'Dificultad de la flashcard',
+              example: 'medium'
+            },
+            nextReviewDate: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Próxima fecha de revisión programada'
+            },
+            lastReviewed: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Última fecha de revisión',
+              nullable: true
+            },
+            reviewCount: {
+              type: 'integer',
+              description: 'Número de veces que se ha revisado la flashcard',
+              example: 3
+            },
+            createdBy: {
+              type: 'string',
+              description: 'ID del usuario que creó la flashcard',
+              example: '5f8d0f4d7f8f8c2b2c2b2b2b'
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Fecha de creación de la flashcard'
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Fecha de última actualización de la flashcard'
+            }
+          }
+        },
+        // Esquema de Error
         Error: {
           type: 'object',
           properties: {
@@ -101,6 +166,63 @@ const options: swaggerJsdoc.Options = {
                     email: 'El correo electrónico es requerido',
                     password: 'La contraseña debe tener al menos 6 caracteres'
                   }
+                }
+              }
+            }
+          }
+        }
+      },
+      // Respuestas comunes
+      responses: {
+        Unauthorized: {
+          description: 'No autorizado - Se requiere autenticación',
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/components/schemas/Error'
+              },
+              example: {
+                success: false,
+                message: 'No autorizado',
+                error: {
+                  statusCode: 401,
+                  message: 'Por favor inicia sesión para acceder a este recurso'
+                }
+              }
+            }
+          }
+        },
+        Forbidden: {
+          description: 'Prohibido - No tienes permisos para realizar esta acción',
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/components/schemas/Error'
+              },
+              example: {
+                success: false,
+                message: 'Acceso denegado',
+                error: {
+                  statusCode: 403,
+                  message: 'No tienes permiso para realizar esta acción'
+                }
+              }
+            }
+          }
+        },
+        NotFound: {
+          description: 'Recurso no encontrado',
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/components/schemas/Error'
+              },
+              example: {
+                success: false,
+                message: 'No encontrado',
+                error: {
+                  statusCode: 404,
+                  message: 'El recurso solicitado no fue encontrado'
                 }
               }
             }
