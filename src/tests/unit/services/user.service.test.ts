@@ -1,6 +1,7 @@
 import { EmailService } from '../../../services/email.service';
 import { USerService } from '../../../services/user.service';
 import { User } from '../../../models/User';
+import { JWTService } from '../../../services/jwt.service';
 
 // Mock dependencies
 jest.mock('../../../models/User');
@@ -69,6 +70,168 @@ describe('UserService - Unit Test', () => {
       await expect(userService.registerUser(userData)).rejects.toThrow('Email already in use');
 
       expect(User.findOne).toHaveBeenCalledWith({ email: userData.email });
+    });
+  });
+
+  describe('login', () => {
+    it('should login user successfully with valid credentials', async () => {
+      // Arrange
+      const loginData = {
+        email: 'test@example.com',
+        password: 'password123',
+      };
+
+      const mockUser = {
+        _id: '507f1f77bcf86cd799439011',
+        email: loginData.email,
+        name: 'Test User',
+        isVerified: true,
+        lastLogin: null,
+        comparePassword: jest.fn().mockResolvedValue(true),
+        save: jest.fn().mockResolvedValue(true),
+      };
+
+      (User.findOne as jest.Mock).mockResolvedValue(mockUser);
+      (JWTService.generateToken as jest.Mock).mockReturnValue('jwt-token');
+
+      // Act
+      const result = await userService.login(loginData);
+
+      // Assert
+      expect(User.findOne).toHaveBeenCalledWith({ email: loginData.email });
+      expect(mockUser.comparePassword).toHaveBeenCalledWith(loginData.password);
+      expect(mockUser.save).toHaveBeenCalled();
+      expect(JWTService.generateToken).toHaveBeenCalled();
+      expect(result.token).toBe('jwt-token');
+      expect(result.user.email).toBe(loginData.email);
+    });
+  });
+
+  it('should throw error if user is not verified', async () => {
+    // Arrange
+    const loginData = {
+      email: 'test@example.com',
+      password: 'password123',
+    };
+
+    const mockUser = {
+      email: loginData.email,
+      isVerified: false,
+      comparePassword: jest.fn().mockResolvedValue(true),
+    };
+
+    (User.findOne as jest.Mock).mockResolvedValue(mockUser);
+
+    // Act & Assert
+    await expect(userService.login(loginData)).rejects.toThrow(
+      'User not verified, Please contact admin'
+    );
+  });
+
+  it('should throw error with invalid password', async () => {
+    // Arrange
+    const loginData = {
+      email: 'test@example.com',
+      password: 'wrongpassword',
+    };
+
+    const mockUser = {
+      email: loginData.email,
+      isVerified: true,
+      comparePassword: jest.fn().mockResolvedValue(false),
+    };
+
+    (User.findOne as jest.Mock).mockResolvedValue(mockUser);
+
+    // Act & Assert
+    await expect(userService.login(loginData)).rejects.toThrow('Invalid credentials');
+  });
+
+  it('should throw error if user not found', async () => {
+    // Arrange
+    const loginData = {
+      email: 'nonexistent@example.com',
+      password: 'password123',
+    };
+
+    (User.findOne as jest.Mock).mockResolvedValue(null);
+
+    // Act & Assert
+    await expect(userService.login(loginData)).rejects.toThrow('Invalid credentials');
+  });
+
+  describe('verifyEmail', () => {
+    it('should verify email successfully', async () => {
+      // Arrange
+      const token = 'valid-token';
+
+      const mockUser = {
+        _id: '507f1f77bcf86cd799439011',
+        email: 'test@example.test',
+        name: 'Test User',
+        isVerified: false,
+        verificationToken: token,
+        save: jest.fn().mockResolvedValue(true),
+      };
+
+      (User.findOne as jest.Mock).mockResolvedValue(mockUser);
+
+      // Act
+      const result = await userService.verifyEmail(token);
+
+      // Assert
+      expect(User.findOne).toHaveBeenCalledWith({ verificationToken: token });
+      expect(mockUser.isVerified).toBe(true);
+      expect(mockUser.verificationToken).toBeUndefined();
+      expect(mockUser.save).toHaveBeenCalled();
+      expect(result.email).toBe(mockUser.email);
+      expect(result.isVerified).toBe(true);
+    });
+
+    it('should throw error with invalid or expired token', async () => {
+      // Arrange
+      const token = 'invalid-token';
+
+      (User.findOne as jest.Mock).mockResolvedValue(null);
+
+      // Act & Assert
+      await expect(userService.verifyEmail(token)).rejects.toThrow(
+        'Invalid or expired verification token'
+      );
+    });
+  });
+
+  describe('getUserById', () => {
+    it('should return user data for valid user ID', async () => {
+      // Arrange
+      const userId = '507f1f77bcf86cd799439011';
+
+      const mockUser = {
+        _id: userId,
+        email: 'test@example.com',
+        name: 'Test User',
+        isVerified: true,
+      };
+
+      (User.findById as jest.Mock).mockResolvedValue(mockUser);
+
+      // Act
+      const result = await userService.getUserById(userId);
+
+      // Assert
+      expect(User.findById).toHaveBeenCalledWith(userId);
+      expect(result.email).toBe(mockUser.email);
+      expect(result.name).toBe(mockUser.name);
+    });
+
+    it('should throw error if user not found', async () => {
+      // Arrange
+      const userId = 'nonexistent-id';
+      (User.findById as jest.Mock).mockResolvedValue(null);
+
+      // Act & Assert
+      await expect(userService.getUserById(userId)).rejects.toThrow('User not found');
+      expect(User.findById).toHaveBeenCalledWith(userId);
     });
   });
 });
