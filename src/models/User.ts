@@ -1,77 +1,68 @@
-import { Schema, model, Model, Document } from 'mongoose';
-import { createBaseSchema, BaseDocument } from './BaseModel';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import mongoose, { Document, Schema } from 'mongoose';
+import bcrypt from 'bcryptjs';
+import { IUser } from '../interfaces/user.interface';
 
-export interface IUser extends BaseDocument {
-    name: string;
-    email: string;
-    password: string;
-    role: 'user' | 'admin';
-    comparePassword(candidatePassword: string): Promise<boolean>;
-    getSignedJwtToken(): string;
+export interface IUserDocument extends IUser, Document {
+  comparePassword(candidatePassword: string): Promise<boolean>;
+  generateVerificationToken(): string;
 }
 
-const userSchema = createBaseSchema<IUser>({
-    name: {
-        type: String,
-        required: [true, 'Please add a name'],
-        trim: true
-    },
+const userSchema = new Schema<IUserDocument>(
+  {
     email: {
-        type: String,
-        required: [true, 'Please add an email'],
-        unique: true,
-        match: [
-            /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-            'Please add a valid email'
-        ]
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
     },
     password: {
-        type: String,
-        required: [true, 'Please add a password'],
-        minlength: 6,
-        select: false
+      type: String,
+      required: true,
+      minlength: 6,
     },
-    role: {
-        type: String,
-        enum: ['user', 'admin'],
-        default: 'user'
-    }
-});
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    verificationToken: {
+      type: String,
+    },
+    lastLogin: {
+      type: Date,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
 
-// Encrypt password using bcrypt
+// Hash password antes de guardar
 userSchema.pre('save', async function (next) {
-    if (!this.isModified('password')) {
-        next();
-    }
+  if (!this.isModified('password')) return next();
 
-    const salt = await bcrypt.genSalt(10);
+  try {
+    const salt = await bcrypt.genSalt(12);
     this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error: any) {
+    next(error);
+  }
 });
 
-// Match user entered password to hashed password in database
-userSchema.methods.comparePassword = async function (enteredPassword: string) {
-    return await bcrypt.compare(enteredPassword, this.password);
+// Método para comparar passwords
+userSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
+  return bcrypt.compare(candidatePassword, this.password);
 };
 
-userSchema.methods.getSignedJwtToken = function (): string {
-    if (!process.env.JWT_SECRET) {
-        throw new Error('JWT_SECRET is not defined in environment variables');
-    }
-
-    // Ensure JWT_EXPIRES_IN is in the correct format (e.g., '30d', '1h', '7d')
-    const expiresIn = process.env.JWT_EXPIRES_IN && /^\d+[smhdwmy]$/.test(process.env.JWT_EXPIRES_IN)
-        ? process.env.JWT_EXPIRES_IN
-        : '30d';
-
-    const payload = { id: this._id.toString() };
-    const secret = process.env.JWT_SECRET;
-    const options: jwt.SignOptions = { expiresIn: Number(process.env.JWT_EXPIRES_IN) };
-
-    return jwt.sign(payload, secret, options);
+// Método para generar token de verificación
+userSchema.methods.generateVerificationToken = function (): string {
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 };
 
-const User: Model<IUser> = model<IUser>('User', userSchema);
-
-export default User;
+export const User = mongoose.model<IUserDocument>('User', userSchema);
