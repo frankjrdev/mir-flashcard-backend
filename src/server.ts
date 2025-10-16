@@ -4,16 +4,15 @@ import { config } from 'dotenv';
 // Load environment variables
 config();
 
-const PORT = process.env.PORT || 3000;
+const PORT: number = Number(process.env.PORT) || 3000;
 
 // Start server
-const server = app.listen(PORT, () => {
-    console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err: Error) => {
-    console.error(`Error: ${err.message}`);
-    // Close server & exit process
-    server.close(() => process.exit(1));
+  console.error(`Error: ${err.message}`);
+  server.close(() => process.exit(1));
 });

@@ -1,10 +1,11 @@
-version: '3.8'
+version: "3.8"
 
 services:
   app:
     build: .
+    container_name: mir-flashcard-backend
     ports:
-      - "3000:3000"
+      - "5000:5000"
     environment:
       - NODE_ENV=development
       - MONGODB_URI=mongodb://admin:password@mongo:27017/mir-flashcard?authSource=admin
@@ -14,18 +15,27 @@ services:
       - ./:/usr/src/app
       - /usr/src/app/node_modules
     command: npm run dev
+    networks:
+      - backend-net
 
   mongo:
     image: mongo:6
     container_name: mongo
+    restart: always
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=password
       - MONGO_INITDB_DATABASE=mir-flashcard
     ports:
-      - "27017:27017"
+      - "27018:27017"
     volumes:
       - mongodb_data_container:/data/db
+    networks:
+      - backend-net
 
 volumes:
   mongodb_data_container:
+
+networks:
+  backend-net:
+    driver: bridge

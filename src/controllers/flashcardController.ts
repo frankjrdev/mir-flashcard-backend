@@ -4,10 +4,84 @@ import Subject from '../models/Subject';
 import sendResponse from '../utils/responseHandler';
 import asyncHandler from '../utils/asyncHandler';
 
-// @desc    Get all flashcards
-// @route   GET /api/v1/flashcards
-// @route   GET /api/v1/subjects/:subjectId/flashcards
-// @access  Private
+/**
+ * @swagger
+ * tags:
+ *   name: Flashcards
+ *   description: Gestión de flashcards del sistema
+ */
+
+/**
+ * @swagger
+ * /api/flashcards:
+ *   get:
+ *     summary: Obtener todas las flashcards
+ *     tags: [Flashcards]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: subjectId
+ *         schema:
+ *           type: string
+ *         description: ID de la materia para filtrar flashcards
+ *     responses:
+ *       200:
+ *         description: Lista de flashcards
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Flashcard'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *
+ * /api/subjects/{subjectId}/flashcards:
+ *   get:
+ *     summary: Obtener flashcards por materia
+ *     tags: [Flashcards]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: subjectId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de la materia
+ *     responses:
+ *       200:
+ *         description: Lista de flashcards de la materia
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Flashcard'
+ *       404:
+ *         description: Materia no encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 const getFlashcards = asyncHandler(async (req: any, res: Response, next: NextFunction) => {
     if (req.params.subjectId) {
         // Check if subject exists and user has access to it
@@ -61,9 +135,80 @@ const getFlashcard = asyncHandler(async (req: any, res: Response, next: NextFunc
     sendResponse(res, 200, true, 'Flashcard retrieved successfully', { flashcard });
 });
 
-// @desc    Create flashcard
-// @route   POST /api/v1/subjects/:subjectId/flashcards
-// @access  Private
+/**
+ * @swagger
+ * /api/subjects/{subjectId}/flashcards:
+ *   post:
+ *     summary: Crear una nueva flashcard en una materia específica
+ *     tags: [Flashcards]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: subjectId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de la materia a la que pertenecerá la flashcard
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - question
+ *               - answer
+ *             properties:
+ *               question:
+ *                 type: string
+ *                 description: Pregunta o concepto principal de la flashcard
+ *                 example: ¿Cuál es la capital de Francia?
+ *               answer:
+ *                 type: string
+ *                 description: Respuesta o definición detallada
+ *                 example: París
+ *               difficulty:
+ *                 type: string
+ *                 enum: [easy, medium, hard]
+ *                 description: Nivel de dificultad de la flashcard
+ *                 default: medium
+ *               tags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Etiquetas para categorizar la flashcard
+ *                 example: ["anatomía", "sistema nervioso"]
+ *               explanation:
+ *                 type: string
+ *                 description: Explicación detallada o contexto adicional
+ *     responses:
+ *       201:
+ *         description: Flashcard creada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   $ref: '#/components/schemas/Flashcard'
+ *       400:
+ *         $ref: '#/components/schemas/Error'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       404:
+ *         description: Materia no encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 const createFlashcard = asyncHandler(async (req: any, res: Response, next: NextFunction) => {
     // Add subject to req.body
     req.body.subject = req.params.subjectId;
