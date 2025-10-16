@@ -97,6 +97,11 @@ export class USerService {
     return this.toUserResponseDTO(user);
   }
 
+  async getAllUsers(): Promise<IUserResponseDTO[]> {
+    const users = await User.find();
+    return users.map((user) => this.toUserResponseDTO(user));
+  }
+
   async getUserById(userId: string): Promise<IUserResponseDTO> {
     const user = await User.findById(userId);
     if (!user) {
