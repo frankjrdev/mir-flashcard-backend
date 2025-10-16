@@ -1,5 +1,6 @@
-export interface IUser {
-  //   _id?: string;
+import { Document } from 'mongoose';
+
+export interface IUser extends Document {
   email: string;
   password: string;
   name: string;
@@ -8,6 +9,8 @@ export interface IUser {
   lastLogin?: Date;
   createdAt?: Date;
   updatedAt?: Date;
+  comparePassword(candidatePassword: string): Promise<boolean>;
+  generateVerificationToken(): string;
 }
 
 export interface IUserCreateDTO {

@@ -2,12 +2,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { IUser } from '../interfaces/user.interface';
 
-export interface IUserDocument extends IUser, Document {
-  comparePassword(candidatePassword: string): Promise<boolean>;
-  generateVerificationToken(): string;
-}
-
-const userSchema = new Schema<IUserDocument>(
+const userSchema = new Schema<IUser>(
   {
     email: {
       type: String,
@@ -65,4 +60,4 @@ userSchema.methods.generateVerificationToken = function (): string {
   return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 };
 
-export const User = mongoose.model<IUserDocument>('User', userSchema);
+export const User = mongoose.model<IUser>('User', userSchema);
