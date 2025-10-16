@@ -12,5 +12,8 @@ module.exports = {
   moduleNameMapping: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+  },
   setupFilesAfterEnv: ['<rootDir>/src/tests/setup.ts'],
 };

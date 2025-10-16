@@ -13,7 +13,7 @@ export class EmailService {
     });
   }
 
-  async semdVerificationEmail(email: string, token: string, name: string): Promise<void> {
+  async sendVerificationEmail(email: string, token: string, name: string): Promise<void> {
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: process.env.ADMIN_EMAIL,

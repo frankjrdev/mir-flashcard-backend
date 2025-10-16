@@ -38,7 +38,7 @@ export class USerService {
     await user.save();
 
     // Send verification email to admin
-    await this.emailService.semdVerificationEmail(
+    await this.emailService.sendVerificationEmail(
       user.email,
       user.verificationToken!,
       user.name || ''
