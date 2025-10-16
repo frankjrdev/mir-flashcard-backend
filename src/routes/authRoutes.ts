@@ -1,11 +1,5 @@
 import { Router } from 'express';
-import { register, login, getMe } from '../controllers/authController';
-import { protect } from '@/middlewares/auth.middelware';
 
-const router = Router();
+const authRoute = Router();
 
-router.post('/register', register);
-router.post('/login', login);
-router.get('/me', protect, getMe);
-
-export default router;
+export default authRoute;

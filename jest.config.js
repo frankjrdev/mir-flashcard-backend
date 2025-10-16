@@ -1,21 +1,16 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  roots: ['<rootDir>/src/__tests__'],
-  testMatch: ['**/__tests__/**/*.test.ts'],
+  roots: ['<rootDir>/src'],
+  testMatch: ['**/__tests__/**/*.+(ts|tsx|js)', '**/?(*.)+(spec|test).+(ts|tsx|js)'],
   transform: {
-    '^.+\\.tsx?$': 'ts-jest',
+    '^.+\\.(ts|tsx)$': 'ts-jest',
   },
-  moduleNameMapper: {
+  collectCoverageFrom: ['src/**/*.{ts,js}', '!src/**/*.d.ts', '!src/server.ts', '!src/**/index.ts'],
+  coverageDirectory: 'coverage',
+  coverageReporters: ['text', 'lcov', 'html'],
+  moduleNameMapping: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
-  collectCoverage: true,
-  coverageDirectory: 'coverage',
-  collectCoverageFrom: [
-    'src/**/*.{ts,tsx}',
-    '!src/**/*.d.ts',
-    '!src/**/*.test.ts',
-    '!src/server.ts',
-    '!src/app.ts',
-  ],
+  setupFilesAfterEnv: ['<rootDir>/src/tests/setup.ts'],
 };
