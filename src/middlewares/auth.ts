@@ -1,53 +1,45 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import User from '../models/User';
-import { ErrorWithStatus } from './errorHandler';
+import { JWTService } from '../services/jwt.service';
 
-interface JwtPayload {
-    id: string;
+export interface AuthRequest extends Request {
+  user?: any;
 }
 
-// Protect routes
-const protect = async (req: any, res: Response, next: NextFunction) => {
-    try {
-        let token;
+export const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction): void => {
+  try {
+    const authHeader = req.headers.authorization;
 
-        if (
-            req.headers.authorization &&
-            req.headers.authorization.startsWith('Bearer')
-        ) {
-            // Set token from Bearer token in header
-            token = req.headers.authorization.split(' ')[1];
-        }
-
-        // Make sure token exists
-        if (!token) {
-            return next(new Error('Not authorized to access this route'));
-        }
-
-        // Verify token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
-
-        req.user = await User.findById(decoded.id).select('-password');
-
-        next();
-    } catch (err) {
-        return next(new Error('Not authorized to access this route'));
+    if (!authHeader?.startsWith('Bearer ')) {
+      res.status(401).json({ error: 'Token de acceso requerido' });
+      return;
     }
+
+    const token = authHeader.substring(7);
+    const decoded = JWTService.verifyToken(token);
+
+    req.user = decoded;
+    next();
+  } catch (error) {
+    res.status(401).json({ error: 'Token inválido o expirado' });
+  }
 };
 
-// Grant access to specific roles
-const authorize = (...roles: string[]) => {
-    return (req: any, res: Response, next: NextFunction) => {
-        if (!roles.includes(req.user.role)) {
-            return next(
-                new Error(
-                    `User role ${req.user.role} is not authorized to access this route`
-                )
-            );
-        }
-        next();
-    };
-};
+export const optionalAuthMiddleware = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): void => {
+  try {
+    const authHeader = req.headers.authorization;
 
-export { protect, authorize };
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      const decoded = JWTService.verifyToken(token);
+      req.user = decoded;
+    }
+
+    next();
+  } catch (error) {
+    next();
+  }
+};
