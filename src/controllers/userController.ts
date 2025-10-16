@@ -3,12 +3,13 @@ import { User } from '@/models/User';
 import sendResponse from '../utils/responseHandler';
 import asyncHandler from '../utils/asyncHandler';
 import { USerService } from '@/services/user.service';
+import { AuthRequest } from '@/middlewares/auth.middelware';
 
 export class UserController {
   private userService: USerService;
 
-  constructor(userService: USerService) {
-    this.userService = userService;
+  constructor() {
+    this.userService = new USerService();
   }
 
   /**
@@ -198,6 +199,141 @@ export class UserController {
       sendResponse(res, 200, true, 'User deleted successfully', {});
     } catch (error) {
       next(error);
+    }
+  };
+
+  /**
+   * @swagger
+   * /api/users/login:
+   *   post:
+   *     summary: Login a user
+   *     tags: [Users]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - email
+   *               - password
+   *             properties:
+   *               email:
+   *                 type: string
+   *                 format: email
+   *               password:
+   *                 type: string
+   *     responses:
+   *       200:
+   *         description: User logged in successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                 token:
+   *                   type: string
+   *       401:
+   *         description: Invalid credentials
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
+  login = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const authResponse = await this.userService.login(req.body);
+      res.json(authResponse);
+    } catch (error: any) {
+      res.status(401).json({ error: error.message });
+    }
+  };
+
+  /**
+   * @swagger
+   * /api/users/verify-email:
+   *   post:
+   *     summary: Verify user email
+   *     tags: [Users]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - token
+   *             properties:
+   *               token:
+   *                 type: string
+   *     responses:
+   *       200:
+   *         description: User verified successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                 user:
+   *                   $ref: '#/components/schemas/User'
+   *       400:
+   *         description: Invalid token
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
+  verifyEmail = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const user = await this.userService.verifyEmail(req.body.token);
+      res.json({
+        message: 'Usuario verificado exitosamente',
+        user,
+      });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  };
+
+  /**
+   * @swagger
+   * /api/users/profile:
+   *   get:
+   *     summary: Get user profile
+   *     tags: [Users]
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: User profile retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                 message:
+   *                   type: string
+   *                 data:
+   *                   $ref: '#/components/schemas/User'
+   *       404:
+   *         description: User not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
+  getProfile = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const user = await this.userService.getUserById(req.user.id);
+      res.json(user);
+    } catch (error: any) {
+      res.status(404).json({ error: error.message });
     }
   };
 }

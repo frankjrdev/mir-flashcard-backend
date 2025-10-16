@@ -1,10 +1,9 @@
 import { Router } from 'express';
 import authRoutes from './authRoutes';
-import userRoutes from './userRoutes';
+import userRoutes from './user.routes';
 import subjectRoutes from './subjectRoutes';
 import flashcardRoutes from './flashcardRoutes';
 import studySessionRoutes from './studySessionRoutes';
-
 
 const router = Router();
 
