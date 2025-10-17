@@ -1,29 +1,37 @@
-import { Schema, model, Model, Document, Types } from 'mongoose';
-import { createBaseSchema, BaseDocument } from './BaseModel';
+import { ISubject } from '@/interfaces/subject.interfaces';
+import mongoose, { Document, Schema, Types } from 'mongoose';
 
-export interface ISubject extends BaseDocument {
-    name: string;
-    description?: string;
-    createdBy: Types.ObjectId;
+export interface ISubjectDocument extends ISubject, Document {
+  _id: Types.ObjectId;
+  userId: Types.ObjectId;
 }
 
-const subjectSchema = createBaseSchema<ISubject>({
+const subjectSchema = new Schema<ISubjectDocument>(
+  {
     name: {
-        type: String,
-        required: [true, 'Please add a subject name'],
-        trim: true
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 100,
     },
     description: {
-        type: String,
-        trim: true
+      type: String,
+      trim: true,
+      maxlength: 500,
     },
-    createdBy: {
-        type: Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    }
-});
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      index: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
 
-const Subject: Model<ISubject> = model<ISubject>('Subject', subjectSchema);
+// Índice compuesto para búsquedas eficientes
+subjectSchema.index({ userId: 1, name: 1 }, { unique: true });
 
-export default Subject;
+export const Subject = mongoose.model<ISubjectDocument>('Subject', subjectSchema);

@@ -21,6 +21,7 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
     next();
   } catch (error) {
     res.status(401).json({ error: 'Token inválido o expirado' });
+    throw error;
   }
 };
 
@@ -41,5 +42,6 @@ export const optionalAuthMiddleware = (
     next();
   } catch (error) {
     next();
+    throw error;
   }
 };
