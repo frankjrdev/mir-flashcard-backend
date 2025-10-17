@@ -1,5 +1,5 @@
 import { IFlashcard } from '@/interfaces/flashcard.interfaces';
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
 const flashcardSchema = new Schema<IFlashcard>(
   {
@@ -53,7 +53,7 @@ const flashcardSchema = new Schema<IFlashcard>(
   }
 );
 
-// Índices para búsquedas eficientes
+// Indexes for efficient searches
 flashcardSchema.index({ createdBy: 1, createdAt: -1 });
 flashcardSchema.index({ tags: 1 });
 flashcardSchema.index({ difficulty: 1 });

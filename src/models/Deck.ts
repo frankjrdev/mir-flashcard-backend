@@ -29,10 +29,10 @@ const deckSchema = new Schema<IDeck>(
   }
 );
 
-// Middleware para limpiar referencias cuando se elimina un deck
+// Middleware to clean up references when a deck is deleted
 deckSchema.post('findOneAndDelete', async function (doc) {
   if (doc) {
-    // Limpiar referencias en Subject
+    // Remove references in Subject
     const Subject = mongoose.model('Subject');
     await Subject.updateMany({ decks: doc._id }, { $pull: { decks: doc._id } });
   }
