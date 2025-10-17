@@ -1,9 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { User } from '@/models/User';
 import sendResponse from '../utils/responseHandler';
-import asyncHandler from '../utils/asyncHandler';
 import { USerService } from '@/services/user.service';
-import { AuthRequest } from '@/middlewares/auth.middelware';
+import { AuthRequest } from '@/middleware/auth.middleware';
 
 export class UserController {
   private userService: USerService;

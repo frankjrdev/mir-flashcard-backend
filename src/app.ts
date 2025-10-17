@@ -8,7 +8,7 @@ import swaggerSpec from './config/swagger';
 
 import routes from './routes';
 import { connectDB } from './config/dataBase';
-import { errorHandler } from './middlewares/errorHandler';
+import { errorHandler } from './middleware/errorHandler';
 
 // Load environment variables
 config();
