@@ -1,14 +1,12 @@
+import { Types } from 'mongoose';
 import { IDeckResponseDTO } from './deck.interface';
 import { IFlashcardResponseDTO } from './flashcard.interfaces';
 
 export interface ISubject {
-  _id?: string;
+  _id?: Types.ObjectId;
   name: string;
   description?: string;
-  decks: string[]; // Array de Deck IDs
-  flashcards: string[]; // Array de Flashcard IDs sueltas (sin deck)
-  createdBy: string; // User ID
-  isPublic: boolean;
+  userId: Types.ObjectId; // Owner for authorization
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -16,23 +14,20 @@ export interface ISubject {
 export interface ISubjectCreateDTO {
   name: string;
   description?: string;
-  isPublic?: boolean;
 }
 
 export interface ISubjectResponseDTO {
   id: string;
   name: string;
   description?: string;
+  userId: string;
+  flashcardCount: number;
   deckCount: number;
-  totalFlashcards: number;
-  looseFlashcardsCount: number; // Flashcards sin deck
-  isPublic: boolean;
-  createdBy: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
 export interface ISubjectWithDetailsResponseDTO extends ISubjectResponseDTO {
   decks: IDeckResponseDTO[];
-  looseFlashcards: IFlashcardResponseDTO[];
+  flashcards: IFlashcardResponseDTO[]; // Flashcards sin deck
 }

@@ -1,37 +1,29 @@
 import { ISubject } from '@/interfaces/subject.interfaces';
-import mongoose, { Schema } from 'mongoose';
+import mongoose, { Document, Schema, Types } from 'mongoose';
 
-const subjectSchema = new Schema<ISubject>(
+export interface ISubjectDocument extends ISubject, Document {
+  _id: Types.ObjectId;
+  userId: Types.ObjectId;
+}
+
+const subjectSchema = new Schema<ISubjectDocument>(
   {
     name: {
       type: String,
       required: true,
       trim: true,
+      maxlength: 100,
     },
     description: {
       type: String,
       trim: true,
+      maxlength: 500,
     },
-    decks: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'Deck',
-      },
-    ],
-    flashcards: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'Flashcard',
-      },
-    ],
-    createdBy: {
-      type: Schema.Types.ObjectId as any,
+    userId: {
+      type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
-    },
-    isPublic: {
-      type: Boolean,
-      default: false,
+      index: true,
     },
   },
   {
@@ -39,22 +31,7 @@ const subjectSchema = new Schema<ISubject>(
   }
 );
 
-// Middleware para limpiar referencias cuando se elimina una asignatura
-subjectSchema.post('findOneAndDelete', async function (doc) {
-  if (doc) {
-    const Deck = mongoose.model('Deck');
-    const Flashcard = mongoose.model('Flashcard');
+// Índice compuesto para búsquedas eficientes
+subjectSchema.index({ userId: 1, name: 1 }, { unique: true });
 
-    // Eliminar todos los decks de la asignatura
-    await Deck.deleteMany({ _id: { $in: doc.decks } });
-
-    // Eliminar todas las flashcards sueltas de la asignatura
-    await Flashcard.deleteMany({ _id: { $in: doc.flashcards } });
-  }
-});
-
-// Índices para búsquedas eficientes
-subjectSchema.index({ createdBy: 1, createdAt: -1 });
-subjectSchema.index({ isPublic: 1 });
-
-export const Subject = mongoose.model<ISubject>('Subject', subjectSchema);
+export const Subject = mongoose.model<ISubjectDocument>('Subject', subjectSchema);

@@ -1,7 +1,14 @@
 import { IFlashcard } from '@/interfaces/flashcard.interfaces';
-import mongoose, { Schema } from 'mongoose';
+import mongoose, { Schema, Types } from 'mongoose';
 
-const flashcardSchema = new Schema<IFlashcard>(
+export interface IFlashcardDocument extends IFlashcard, Document {
+  _id: Types.ObjectId;
+  subjectId: Types.ObjectId;
+  deckId?: Types.ObjectId;
+  userId: Types.ObjectId;
+}
+
+const flashcardSchema = new Schema<IFlashcardDocument>(
   {
     question: {
       type: String,
@@ -13,9 +20,22 @@ const flashcardSchema = new Schema<IFlashcard>(
       required: true,
       trim: true,
     },
-    explanation: {
-      type: String,
-      trim: true,
+    subjectId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Subject',
+      required: true,
+      index: true,
+    },
+    deckId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Deck',
+      index: true,
+    },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      index: true,
     },
     difficulty: {
       type: String,
@@ -34,28 +54,29 @@ const flashcardSchema = new Schema<IFlashcard>(
     nextReview: {
       type: Date,
     },
-    reviewCount: {
-      type: Number,
-      default: 0,
-    },
-    correctAnswers: {
-      type: Number,
-      default: 0,
-    },
-    createdBy: {
-      type: Schema.Types.ObjectId as any,
-      ref: 'User',
-      required: true,
-    },
   },
   {
     timestamps: true,
   }
 );
 
-// Indexes for efficient searches
-flashcardSchema.index({ createdBy: 1, createdAt: -1 });
-flashcardSchema.index({ tags: 1 });
-flashcardSchema.index({ difficulty: 1 });
+// Índices para búsquedas eficientes
+flashcardSchema.index({ userId: 1, subjectId: 1 });
+flashcardSchema.index({ userId: 1, deckId: 1 });
+flashcardSchema.index({ userId: 1, nextReview: 1 }); // Para spaced repetition
+flashcardSchema.index({ userId: 1, tags: 1 });
 
-export const Flashcard = mongoose.model<IFlashcard>('Flashcard', flashcardSchema);
+// Validación: si tiene deckId, debe pertenecer al mismo subject
+flashcardSchema.pre('save', async function (next) {
+  if (this.deckId) {
+    const Deck = mongoose.model('Deck');
+    const deck = await Deck.findById(this.deckId);
+
+    if (deck && deck.subjectId.toString() !== this.subjectId.toString()) {
+      return next(new Error('El deck debe pertenecer al mismo subject que la flashcard'));
+    }
+  }
+  next();
+});
+
+export const Flashcard = mongoose.model<IFlashcardDocument>('Flashcard', flashcardSchema);
