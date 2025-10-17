@@ -1,56 +1,61 @@
-import { Schema, model, Model, Document, Types } from 'mongoose';
-import { createBaseSchema, BaseDocument } from './BaseModel';
+import { IFlashcard } from '@/interfaces/flashcard.interfaces';
+import mongoose, { Document, Schema } from 'mongoose';
 
-export interface IFlashcard extends BaseDocument {
-    question: string;
-    answer: string;
-    subject: Types.ObjectId;
-    createdBy: Types.ObjectId;
-    difficulty: 'easy' | 'medium' | 'hard';
-    nextReviewDate: Date;
-    lastReviewed?: Date;
-    reviewCount: number;
-}
-
-const flashcardSchema = createBaseSchema<IFlashcard>({
+const flashcardSchema = new Schema<IFlashcard>(
+  {
     question: {
-        type: String,
-        required: [true, 'Please add a question'],
-        trim: true
+      type: String,
+      required: true,
+      trim: true,
     },
     answer: {
-        type: String,
-        required: [true, 'Please add an answer'],
-        trim: true
+      type: String,
+      required: true,
+      trim: true,
     },
-    subject: {
-        type: Schema.Types.ObjectId,
-        ref: 'Subject',
-        required: true
-    },
-    createdBy: {
-        type: Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
+    explanation: {
+      type: String,
+      trim: true,
     },
     difficulty: {
+      type: String,
+      enum: ['easy', 'medium', 'hard'],
+      default: 'medium',
+    },
+    tags: [
+      {
         type: String,
-        enum: ['easy', 'medium', 'hard'],
-        default: 'medium'
-    },
-    nextReviewDate: {
-        type: Date,
-        default: Date.now
-    },
+        trim: true,
+      },
+    ],
     lastReviewed: {
-        type: Date
+      type: Date,
+    },
+    nextReview: {
+      type: Date,
     },
     reviewCount: {
-        type: Number,
-        default: 0
-    }
-});
+      type: Number,
+      default: 0,
+    },
+    correctAnswers: {
+      type: Number,
+      default: 0,
+    },
+    createdBy: {
+      type: Schema.Types.ObjectId as any,
+      ref: 'User',
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
 
-const Flashcard: Model<IFlashcard> = model<IFlashcard>('Flashcard', flashcardSchema);
+// Índices para búsquedas eficientes
+flashcardSchema.index({ createdBy: 1, createdAt: -1 });
+flashcardSchema.index({ tags: 1 });
+flashcardSchema.index({ difficulty: 1 });
 
-export default Flashcard;
+export const Flashcard = mongoose.model<IFlashcard>('Flashcard', flashcardSchema);
