@@ -1,4 +1,4 @@
-import app from './main';
+import app from './app';
 import { config } from 'dotenv';
 
 // Load environment variables
