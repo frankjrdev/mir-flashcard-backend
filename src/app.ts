@@ -53,18 +53,16 @@ app.use(
   })
 );
 
+// Import health check routes
+import healthCheckRoutes from './routes/healthCheckRoutes';
+
 // API Routes
-app.use('/api', routes);
+app.use('/api/health', healthCheckRoutes);
 app.use('/api/assignatures', routes);
 app.use('/api/auth', routes);
 app.use('/api/users', routes);
 app.use('/api/flashcards', routes);
 // app.use('/api/decks', routes);
-
-// Health check endpoint
-app.get('/api/health', (req: Request, res: Response) => {
-  res.status(200).json({ status: 'ok', message: 'Server is running' });
-});
 
 // 404 handler
 app.use((req: Request, res: Response) => {
